@@ -13,6 +13,19 @@
     { "name": "Broccoli", "unit": "cup", "kcal": 25 },
     { "name": "Eggs", "unit": "large", "kcal": 70 },
     { "name": "Avocado", "unit": "half", "kcal": 160 },
-    { "name": "Salmon", "unit": "ounce", "kcal": 50 }
+    { "name": "Salmon", "unit": "ounce", "kcal": 50 },
+    { "name": "Progresso split pea", "unit": "can", "kcal": 280 },
+    { "name": "Slim chicken tender", "unit": "serving", "kcal": 95 },
+    { "name": "Campbells chicken noodle", "unit": "can", "kcal": 180 },
+    { "name": "Morning bun", "unit": "serving", "kcal": 350 },
+    { "name": "Slims waffle", "unit": "serving", "kcal": 360 },
+    { "name": "Croissant", "unit": "serving", "kcal": 280 },
+    { "name": "Costco canned chicken", "unit": "can", "kcal": 210 },
+    { "name": "Sticky rice", "unit": "piece", "kcal": 310 },
+    { "name": "Bacon breakfast roller", "unit": "serving", "kcal": 340 },
+    { "name": "Sausage mcmuffin", "unit": "serving", "kcal": 400 },
+    { "name": "Belgian waffle", "unit": "serving", "kcal": 360 },
+    { "name": "Cinnamon roll", "unit": "serving", "kcal": 350 },
+    { "name": "Hamburger patty 4oz", "unit": "serving", "kcal": 180 }
   ]
 }
