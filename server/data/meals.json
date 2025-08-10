@@ -1,0 +1,18 @@
+{
+  "meals": [],
+  "foodDatabase": [
+    { "name": "Apple", "unit": "medium", "kcal": 95 },
+    { "name": "Banana", "unit": "medium", "kcal": 105 },
+    { "name": "Orange", "unit": "medium", "kcal": 62 },
+    { "name": "Oatmeal", "unit": "serving", "kcal": 150 },
+    { "name": "Whole grain toast", "unit": "slice", "kcal": 80 },
+    { "name": "Peanut butter", "unit": "tablespoon", "kcal": 95 },
+    { "name": "Greek yogurt", "unit": "cup", "kcal": 130 },
+    { "name": "Chicken breast", "unit": "ounce", "kcal": 45 },
+    { "name": "Brown rice", "unit": "cup", "kcal": 220 },
+    { "name": "Broccoli", "unit": "cup", "kcal": 25 },
+    { "name": "Eggs", "unit": "large", "kcal": 70 },
+    { "name": "Avocado", "unit": "half", "kcal": 160 },
+    { "name": "Salmon", "unit": "ounce", "kcal": 50 }
+  ]
+}

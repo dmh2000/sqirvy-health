@@ -1,0 +1,21 @@
+{
+  "name": "Sqirvy Health - Calorie & Weight Tracker",
+  "short_name": "Sqirvy Health",
+  "description": "Track your daily calories and weight progress with beautiful charts",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f5f5",
+  "theme_color": "#2196f3",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/vite.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["health", "lifestyle", "productivity"],
+  "lang": "en",
+  "scope": "/"
+}
