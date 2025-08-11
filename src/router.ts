@@ -10,7 +10,7 @@ export class Router {
   constructor() {
     this.state = {
       currentPage: 'dashboard',
-      currentDate: new Date().toISOString().split('T')[0],
+      currentDate: this.getLocalDateString(),
       mealsData: null,
       weightData: null
     };
@@ -129,5 +129,13 @@ export class Router {
 
   public getState(): AppState {
     return { ...this.state };
+  }
+
+  private getLocalDateString(): string {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 }

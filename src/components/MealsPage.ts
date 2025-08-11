@@ -35,28 +35,19 @@ export class MealsPage {
             <form id="food-form">
               <div class="form-group">
                 <label for="food-name">Food Name:</label>
-                <input type="text" id="food-name" required>
-                <div id="autocomplete-results" class="autocomplete-results"></div>
-              </div>
-              
-              <div class="form-group">
-                <label for="food-unit">Unit:</label>
-                <select id="food-unit" required>
-                  <option value="">Select unit</option>
-                  <option value="serving">serving</option>
-                  <option value="cup">cup</option>
-                  <option value="tablespoon">tablespoon</option>
-                  <option value="ounce">ounce</option>
-                  <option value="gram">gram</option>
-                  <option value="small">small</option>
-                  <option value="medium">medium</option>
-                  <option value="large">large</option>
+                <select id="food-name" required>
+                  <option value="">Select food item</option>
                 </select>
               </div>
               
               <div class="form-group">
+                <label for="food-unit">Unit:</label>
+                <input type="text" id="food-unit" readonly>
+              </div>
+              
+              <div class="form-group">
                 <label for="food-calories">Calories:</label>
-                <input type="number" id="food-calories" min="1" required>
+                <input type="number" id="food-calories" readonly>
               </div>
               
               <div class="form-actions">
@@ -117,6 +108,7 @@ export class MealsPage {
 
   static async init(_state: AppState) {
     await this.loadMealsData(_state);
+    await this.loadFoodDatabase();
     this.setupEventListeners();
   }
 
@@ -133,6 +125,37 @@ export class MealsPage {
     } finally {
       LoadingManager.hide('meals-grid');
     }
+  }
+
+  private static async loadFoodDatabase() {
+    try {
+      const mealsData = await this.api.getMeals();
+      this.populateFoodDropdown(mealsData.foodDatabase);
+    } catch (error) {
+      console.error('Error loading food database:', error);
+    }
+  }
+
+  private static populateFoodDropdown(foodDatabase: any[]) {
+    const select = document.getElementById('food-name') as HTMLSelectElement;
+    if (!select) return;
+
+    // Clear existing options except the first one
+    select.innerHTML = '<option value="">Select food item</option>';
+    
+    // Sort food items alphabetically
+    const sortedFoods = [...foodDatabase].sort((a, b) => a.name.localeCompare(b.name));
+    
+    // Add food items as options
+    sortedFoods.forEach((food, index) => {
+      const option = document.createElement('option');
+      option.value = index.toString();
+      option.textContent = `${food.name} (${food.unit}, ${food.kcal} kcal)`;
+      option.setAttribute('data-name', food.name);
+      option.setAttribute('data-unit', food.unit);
+      option.setAttribute('data-calories', food.kcal.toString());
+      select.appendChild(option);
+    });
   }
 
   private static renderMealsData(mealsData: any, currentDate: string) {
@@ -220,20 +243,25 @@ export class MealsPage {
       });
     }
 
-    // Autocomplete
-    const foodNameInput = document.getElementById('food-name') as HTMLInputElement;
-    if (foodNameInput) {
-      foodNameInput.addEventListener('input', this.handleAutocomplete.bind(this));
-    }
+    // Food dropdown selection
+    document.addEventListener('change', (e) => {
+      const target = e.target as HTMLElement;
+      if (target.matches('#food-name')) {
+        this.handleFoodSelection(target as HTMLSelectElement);
+      }
+    });
   }
 
-  private static openFoodModal(mealType: MealType, editData?: FoodItem) {
+  private static async openFoodModal(mealType: MealType, editData?: FoodItem) {
     this.currentMealType = mealType;
     const modal = document.getElementById('food-modal');
     const title = document.getElementById('modal-title');
     const submitBtn = document.getElementById('submit-btn');
     
     if (modal) modal.style.display = 'block';
+    
+    // Ensure food database is loaded in the dropdown
+    await this.loadFoodDatabase();
     
     if (editData) {
       if (title) title.textContent = 'Edit Food Item';
@@ -253,13 +281,50 @@ export class MealsPage {
     this.resetForm();
   }
 
+  private static handleFoodSelection(select: HTMLSelectElement) {
+    const selectedOption = select.selectedOptions[0];
+    if (!selectedOption || !selectedOption.value) {
+      // Clear fields if no selection
+      this.clearFoodFields();
+      return;
+    }
+
+    const unit = selectedOption.getAttribute('data-unit');
+    const calories = selectedOption.getAttribute('data-calories');
+
+    const unitInput = document.getElementById('food-unit') as HTMLInputElement;
+    const caloriesInput = document.getElementById('food-calories') as HTMLInputElement;
+
+    if (unitInput) unitInput.value = unit || '';
+    if (caloriesInput) caloriesInput.value = calories || '';
+  }
+
+  private static clearFoodFields() {
+    const unitInput = document.getElementById('food-unit') as HTMLInputElement;
+    const caloriesInput = document.getElementById('food-calories') as HTMLInputElement;
+
+    if (unitInput) unitInput.value = '';
+    if (caloriesInput) caloriesInput.value = '';
+  }
+
   private static populateForm(foodItem: FoodItem) {
-    const nameInput = document.getElementById('food-name') as HTMLInputElement;
-    const unitSelect = document.getElementById('food-unit') as HTMLSelectElement;
+    const nameSelect = document.getElementById('food-name') as HTMLSelectElement;
+    const unitInput = document.getElementById('food-unit') as HTMLInputElement;
     const caloriesInput = document.getElementById('food-calories') as HTMLInputElement;
     
-    if (nameInput) nameInput.value = foodItem.name;
-    if (unitSelect) unitSelect.value = foodItem.unit;
+    // Find the matching option in the dropdown
+    if (nameSelect) {
+      for (let i = 0; i < nameSelect.options.length; i++) {
+        const option = nameSelect.options[i];
+        if (option.getAttribute('data-name') === foodItem.name && 
+            option.getAttribute('data-unit') === foodItem.unit &&
+            option.getAttribute('data-calories') === foodItem.kcal.toString()) {
+          nameSelect.value = option.value;
+          break;
+        }
+      }
+    }
+    if (unitInput) unitInput.value = foodItem.unit;
     if (caloriesInput) caloriesInput.value = foodItem.kcal.toString();
   }
 
@@ -267,89 +332,43 @@ export class MealsPage {
     const form = document.getElementById('food-form') as HTMLFormElement;
     if (form) form.reset();
     
-    const autocompleteResults = document.getElementById('autocomplete-results');
-    if (autocompleteResults) autocompleteResults.innerHTML = '';
+    this.clearFoodFields();
   }
 
-  private static async handleAutocomplete(e: Event) {
-    const input = e.target as HTMLInputElement;
-    const query = input.value.trim();
-    
-    if (query.length < 2) {
-      const results = document.getElementById('autocomplete-results');
-      if (results) results.innerHTML = '';
-      return;
-    }
-
-    const suggestions = await this.api.searchFood(query);
-    this.displayAutocompleteResults(suggestions);
-  }
-
-  private static displayAutocompleteResults(suggestions: any[]) {
-    const resultsContainer = document.getElementById('autocomplete-results');
-    if (!resultsContainer) return;
-    
-    if (suggestions.length === 0) {
-      resultsContainer.innerHTML = '';
-      return;
-    }
-    
-    const resultsHtml = suggestions.map(item => `
-      <div class="autocomplete-item" data-name="${item.name}" data-unit="${item.unit}" data-calories="${item.kcal}">
-        ${item.name} (${item.unit}) - ${item.kcal} kcal
-      </div>
-    `).join('');
-    
-    resultsContainer.innerHTML = resultsHtml;
-    
-    // Add click handlers for autocomplete items
-    resultsContainer.addEventListener('click', (e) => {
-      const target = e.target as HTMLElement;
-      if (target.matches('.autocomplete-item')) {
-        const name = target.getAttribute('data-name')!;
-        const unit = target.getAttribute('data-unit')!;
-        const calories = target.getAttribute('data-calories')!;
-        
-        const nameInput = document.getElementById('food-name') as HTMLInputElement;
-        const unitSelect = document.getElementById('food-unit') as HTMLSelectElement;
-        const caloriesInput = document.getElementById('food-calories') as HTMLInputElement;
-        
-        if (nameInput) nameInput.value = name;
-        if (unitSelect) unitSelect.value = unit;
-        if (caloriesInput) caloriesInput.value = calories;
-        
-        resultsContainer.innerHTML = '';
-      }
-    });
-  }
 
   private static async submitFoodForm() {
-    const nameInput = document.getElementById('food-name') as HTMLInputElement;
-    const unitSelect = document.getElementById('food-unit') as HTMLSelectElement;
+    const nameSelect = document.getElementById('food-name') as HTMLSelectElement;
+    const unitInput = document.getElementById('food-unit') as HTMLInputElement;
     const caloriesInput = document.getElementById('food-calories') as HTMLInputElement;
     const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement;
     
-    if (!nameInput || !unitSelect || !caloriesInput || !this.currentMealType) return;
-    
+    if (!nameSelect || !unitInput || !caloriesInput || !this.currentMealType) return;
+
+    const selectedOption = nameSelect.selectedOptions[0];
+    if (!selectedOption || !selectedOption.value) {
+      this.showFormError('food-name', 'Please select a food item');
+      return;
+    }
+
     const foodItem = {
-      name: nameInput.value.trim(),
-      unit: unitSelect.value,
+      name: selectedOption.getAttribute('data-name') || '',
+      unit: unitInput.value.trim(),
       kcal: parseInt(caloriesInput.value)
     };
     
     // Validation
     if (!foodItem.name) {
-      this.showFormError('food-name', 'Food name is required');
+      this.showFormError('food-name', 'Please select a food item');
       return;
     }
     
     if (!foodItem.unit) {
-      this.showFormError('food-unit', 'Please select a unit');
+      this.showFormError('food-name', 'Selected food item is missing unit information');
       return;
     }
     
     if (!foodItem.kcal || foodItem.kcal <= 0) {
-      this.showFormError('food-calories', 'Please enter a valid number of calories');
+      this.showFormError('food-name', 'Selected food item is missing calorie information');
       return;
     }
     
@@ -363,14 +382,14 @@ export class MealsPage {
         submitBtn.classList.add('loading');
       }
       
-      const currentDate = new Date().toISOString().split('T')[0];
+      const currentDate = this.getLocalDateString();
       const result = await this.api.addFoodItem(currentDate, this.currentMealType, foodItem);
       
       if (result) {
         NotificationManager.success(`Added ${foodItem.name} to ${this.currentMealType.replace('_', ' ')}`);
         this.closeFoodModal();
-        // Refresh the meals data
-        window.location.reload();
+        // Refresh the meals data without leaving the page
+        await this.refreshMealsData();
       } else {
         NotificationManager.error('Failed to add food item. Please try again.');
       }
@@ -429,13 +448,13 @@ export class MealsPage {
     }
     
     try {
-      const currentDate = new Date().toISOString().split('T')[0];
+      const currentDate = this.getLocalDateString();
       const result = await this.api.deleteFoodItem(currentDate, foodId);
       
       if (result) {
         NotificationManager.success('Food item deleted successfully');
-        // Refresh the page (in a real app, this would update state and re-render)
-        window.location.reload();
+        // Refresh the meals data without leaving the page
+        await this.refreshMealsData();
       } else {
         NotificationManager.error('Failed to delete food item. Please try again.');
       }
@@ -443,5 +462,32 @@ export class MealsPage {
       console.error('Error deleting food item:', error);
       NotificationManager.error('Failed to delete food item. Please check your connection and try again.');
     }
+  }
+
+  private static async refreshMealsData() {
+    try {
+      LoadingManager.show('meals-grid', 'Refreshing meals...');
+      const mealsData = await this.api.getMeals();
+      const currentDate = this.getLocalDateString();
+      
+      // Re-render the meals data
+      this.renderMealsData(mealsData, currentDate);
+      
+      // Re-populate food dropdown in case new items were added
+      await this.loadFoodDatabase();
+    } catch (error) {
+      console.error('Error refreshing meals data:', error);
+      NotificationManager.error('Failed to refresh meals data. Please try again.');
+    } finally {
+      LoadingManager.hide('meals-grid');
+    }
+  }
+
+  private static getLocalDateString(): string {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 }

@@ -362,6 +362,18 @@ body {
   box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
 }
 
+.form-group input[readonly] {
+  background-color: #f8f9fa;
+  color: #6c757d;
+  cursor: not-allowed;
+  border-color: #e9ecef;
+}
+
+.form-group input[readonly]:focus {
+  border-color: #e9ecef;
+  box-shadow: none;
+}
+
 .form-actions {
   display: flex;
   gap: 1rem;
@@ -405,19 +417,70 @@ body {
   border: 1px solid #ddd;
   border-top: none;
   border-radius: 0 0 4px 4px;
-  max-height: 200px;
+  max-height: 250px;
   overflow-y: auto;
   z-index: 10;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 .autocomplete-item {
   padding: 0.75rem;
   cursor: pointer;
   border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background-color 0.15s ease;
 }
 
-.autocomplete-item:hover {
-  background: #f8f9fa;
+.autocomplete-item:last-child {
+  border-bottom: none;
+}
+
+.autocomplete-item:hover,
+.autocomplete-item:focus {
+  background: #e3f2fd;
+  outline: none;
+}
+
+.autocomplete-item:active {
+  background: #bbdefb;
+}
+
+.autocomplete-name {
+  font-weight: 500;
+  color: #333;
+  flex: 1;
+}
+
+.autocomplete-details {
+  font-size: 0.85rem;
+  color: #666;
+  font-weight: 400;
+}
+
+/* Form group positioning for autocomplete */
+.form-group {
+  position: relative;
+}
+
+/* Enhanced autocomplete for mobile */
+@media (max-width: 768px) {
+  .autocomplete-results {
+    max-height: 200px;
+    font-size: 16px; /* Prevent zoom on iOS */
+  }
+  
+  .autocomplete-item {
+    padding: 1rem 0.75rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+  
+  .autocomplete-details {
+    font-size: 0.8rem;
+  }
 }
 
 /* Weight Page */

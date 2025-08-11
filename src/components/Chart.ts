@@ -211,12 +211,17 @@ export class ChartComponent {
 
   private static getLast14Days(currentDate: string): string[] {
     const dates: string[] = [];
-    const current = new Date(currentDate + 'T00:00:00'); // Avoid timezone issues
+    const [year, month, day] = currentDate.split('-').map(Number);
+    const current = new Date(year, month - 1, day); // Create date in local timezone
     
     for (let i = 13; i >= 0; i--) {
       const date = new Date(current);
       date.setDate(current.getDate() - i);
-      dates.push(date.toISOString().split('T')[0]);
+      // Format date using local time instead of UTC
+      const localYear = date.getFullYear();
+      const localMonth = String(date.getMonth() + 1).padStart(2, '0');
+      const localDay = String(date.getDate()).padStart(2, '0');
+      dates.push(`${localYear}-${localMonth}-${localDay}`);
     }
     
     return dates;

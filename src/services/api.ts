@@ -82,7 +82,7 @@ export class ApiService {
 
   async searchFood(query: string): Promise<Omit<FoodItem, 'id'>[]> {
     try {
-      const response = await fetch(`${this.baseUrl}/food/search?q=${encodeURIComponent(query)}`);
+      const response = await fetch(`${this.baseUrl}/meals/search?q=${encodeURIComponent(query)}`);
       if (!response.ok) throw new Error('Failed to search food');
       return await response.json();
     } catch (error) {

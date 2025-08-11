@@ -10,10 +10,13 @@ const mealsFilePath = path.join(__dirname, '../data/meals.json');
 // Helper function to read meals data
 async function readMealsData() {
   try {
+    console.log(`   📖 Reading meals data from: ${mealsFilePath}`);
     const data = await fs.readFile(mealsFilePath, 'utf-8');
-    return JSON.parse(data);
+    const parsed = JSON.parse(data);
+    console.log(`   ✅ Loaded ${parsed.meals?.length || 0} meals, ${parsed.foodDatabase?.length || 0} food items`);
+    return parsed;
   } catch (error) {
-    console.error('Error reading meals data:', error);
+    console.error(`   ❌ Error reading meals data: ${error.message}`);
     return { meals: [], foodDatabase: [] };
   }
 }
@@ -21,10 +24,12 @@ async function readMealsData() {
 // Helper function to write meals data
 async function writeMealsData(data) {
   try {
+    console.log(`   💾 Saving meals data to: ${mealsFilePath}`);
     await fs.writeFile(mealsFilePath, JSON.stringify(data, null, 2));
+    console.log(`   ✅ Saved ${data.meals?.length || 0} meals, ${data.foodDatabase?.length || 0} food items`);
     return true;
   } catch (error) {
-    console.error('Error writing meals data:', error);
+    console.error(`   ❌ Error writing meals data: ${error.message}`);
     return false;
   }
 }
@@ -87,12 +92,15 @@ router.post('/:date/food', async (req, res) => {
     const { date } = req.params;
     const { mealType, name, unit, kcal } = req.body;
     
+    console.log(`   🍽️ Adding food item: "${name}" (${kcal} kcal) to ${mealType} on ${date}`);
+    
     const mealsData = await readMealsData();
     
     // Find or create day meals
     let dayMealsIndex = mealsData.meals.findIndex(m => m.date === date);
     
     if (dayMealsIndex === -1) {
+      console.log(`   📅 Creating new day structure for ${date}`);
       // Create new day structure
       const newDay = {
         date,
@@ -106,6 +114,8 @@ router.post('/:date/food', async (req, res) => {
       };
       mealsData.meals.push(newDay);
       dayMealsIndex = mealsData.meals.length - 1;
+    } else {
+      console.log(`   📅 Found existing day structure for ${date}`);
     }
     
     // Create food item with unique ID
@@ -129,7 +139,10 @@ router.post('/:date/food', async (req, res) => {
     );
     
     if (!existingFood) {
+      console.log(`   🆕 Adding new item to food database: "${name}" (${unit}, ${kcal} kcal)`);
       mealsData.foodDatabase.push({ name: name.trim(), unit, kcal });
+    } else {
+      console.log(`   ✅ Food item already exists in database`);
     }
     
     // Save data
@@ -244,12 +257,15 @@ router.delete('/:date/food/:id', async (req, res) => {
   }
 });
 
-// GET /api/food/search - Search food database for autocomplete
+// GET /api/meals/search - Search food database for autocomplete
 router.get('/search', async (req, res) => {
   try {
     const { q } = req.query;
     
+    console.log(`   🔍 Searching food database for: "${q}"`);
+    
     if (!q || q.length < 2) {
+      console.log(`   ⚠️ Query too short, returning empty results`);
       return res.json([]);
     }
     
@@ -272,6 +288,7 @@ router.get('/search', async (req, res) => {
       })
       .slice(0, 10); // Limit to 10 results
     
+    console.log(`   🎯 Found ${matches.length} matches`);
     res.json(matches);
   } catch (error) {
     console.error('Error searching food:', error);
