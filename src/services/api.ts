@@ -1,8 +1,9 @@
 import type { MealsData, WeightData, FoodItem } from '../types';
+import { getApiBaseUrl } from '../config';
 
 export class ApiService {
   private static instance: ApiService;
-  private baseUrl = 'http://localhost:3000/api';
+  private baseUrl = getApiBaseUrl();
 
   public static getInstance(): ApiService {
     if (!ApiService.instance) {

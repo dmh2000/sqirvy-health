@@ -68,104 +68,9 @@
       "kcal": 95
     },
     {
-      "name": "Banana",
-      "unit": "medium",
-      "kcal": 105
-    },
-    {
-      "name": "Orange",
-      "unit": "medium",
-      "kcal": 62
-    },
-    {
-      "name": "Oatmeal",
-      "unit": "serving",
-      "kcal": 150
-    },
-    {
-      "name": "Whole grain toast",
-      "unit": "slice",
-      "kcal": 80
-    },
-    {
-      "name": "Peanut butter",
-      "unit": "tablespoon",
-      "kcal": 95
-    },
-    {
-      "name": "Greek yogurt",
-      "unit": "cup",
-      "kcal": 130
-    },
-    {
-      "name": "Chicken breast",
-      "unit": "ounce",
-      "kcal": 45
-    },
-    {
-      "name": "Brown rice",
-      "unit": "cup",
-      "kcal": 220
-    },
-    {
-      "name": "Broccoli",
-      "unit": "cup",
-      "kcal": 25
-    },
-    {
-      "name": "Eggs",
-      "unit": "large",
-      "kcal": 70
-    },
-    {
       "name": "Avocado",
       "unit": "half",
       "kcal": 160
-    },
-    {
-      "name": "Salmon",
-      "unit": "ounce",
-      "kcal": 50
-    },
-    {
-      "name": "Progresso split pea",
-      "unit": "can",
-      "kcal": 280
-    },
-    {
-      "name": "Slim chicken tender",
-      "unit": "serving",
-      "kcal": 95
-    },
-    {
-      "name": "Campbells chicken noodle",
-      "unit": "can",
-      "kcal": 180
-    },
-    {
-      "name": "Morning bun",
-      "unit": "serving",
-      "kcal": 350
-    },
-    {
-      "name": "Slims waffle",
-      "unit": "serving",
-      "kcal": 360
-    },
-    {
-      "name": "Croissant",
-      "unit": "serving",
-      "kcal": 280
-    },
-    {
-      "name": "Costco canned chicken",
-      "unit": "can",
-      "kcal": 210
-    },
-    {
-      "name": "Sticky rice",
-      "unit": "piece",
-      "kcal": 310
     },
     {
       "name": "Bacon breakfast roller",
@@ -173,9 +78,14 @@
       "kcal": 340
     },
     {
-      "name": "Sausage mcmuffin",
-      "unit": "serving",
-      "kcal": 400
+      "name": "Banana",
+      "unit": "medium",
+      "kcal": 105
+    },
+    {
+      "name": "banana bread (large)",
+      "unit": "piece",
+      "kcal": 350
     },
     {
       "name": "Belgian waffle",
@@ -183,14 +93,49 @@
       "kcal": 360
     },
     {
+      "name": "Broccoli",
+      "unit": "cup",
+      "kcal": 25
+    },
+    {
+      "name": "Brown rice",
+      "unit": "cup",
+      "kcal": 220
+    },
+    {
+      "name": "Campbells chicken noodle",
+      "unit": "can",
+      "kcal": 180
+    },
+    {
+      "name": "canned tuna",
+      "unit": "can",
+      "kcal": 210
+    },
+    {
+      "name": "Chicken breast",
+      "unit": "ounce",
+      "kcal": 45
+    },
+    {
+      "name": "Chipotle soft taco",
+      "unit": "serving",
+      "kcal": 185
+    },
+    {
       "name": "Cinnamon roll",
       "unit": "serving",
       "kcal": 350
     },
     {
-      "name": "Hamburger patty 4oz",
+      "name": "Costco canned chicken",
+      "unit": "can",
+      "kcal": 210
+    },
+    {
+      "name": "Croissant",
       "unit": "serving",
-      "kcal": 180
+      "kcal": 280
     },
     {
       "name": "croissant (large)",
@@ -198,9 +143,84 @@
       "kcal": 350
     },
     {
-      "name": "Chipotle soft taco",
+      "name": "Eggs",
+      "unit": "large",
+      "kcal": 70
+    },
+    {
+      "name": "Greek yogurt",
+      "unit": "cup",
+      "kcal": 130
+    },
+    {
+      "name": "hamburger (large)",
       "unit": "serving",
-      "kcal": 185
+      "kcal": 800
+    },
+    {
+      "name": "Hamburger patty 4oz",
+      "unit": "serving",
+      "kcal": 180
+    },
+    {
+      "name": "mayonnaise",
+      "unit": "tablespoon",
+      "kcal": 94
+    },
+    {
+      "name": "Morning bun",
+      "unit": "serving",
+      "kcal": 350
+    },
+    {
+      "name": "Oatmeal",
+      "unit": "serving",
+      "kcal": 150
+    },
+    {
+      "name": "Orange",
+      "unit": "medium",
+      "kcal": 62
+    },
+    {
+      "name": "Peanut butter",
+      "unit": "tablespoon",
+      "kcal": 95
+    },
+    {
+      "name": "Progresso split pea",
+      "unit": "can",
+      "kcal": 280
+    },
+    {
+      "name": "Salmon",
+      "unit": "ounce",
+      "kcal": 50
+    },
+    {
+      "name": "Sausage mcmuffin",
+      "unit": "serving",
+      "kcal": 400
+    },
+    {
+      "name": "Slim chicken tender",
+      "unit": "serving",
+      "kcal": 95
+    },
+    {
+      "name": "Slims waffle",
+      "unit": "serving",
+      "kcal": 360
+    },
+    {
+      "name": "Sticky rice",
+      "unit": "piece",
+      "kcal": 310
+    },
+    {
+      "name": "Whole grain toast",
+      "unit": "slice",
+      "kcal": 80
     }
   ]
 }
