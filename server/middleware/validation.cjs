@@ -87,46 +87,56 @@ function validateRequest(req, res, next) {
   try {
     // Validate meal-related requests
     if (path.includes("/api/meals/")) {
-      const dateMatch = path.match(/\/api\/meals\/(\d{4}-\d{2}-\d{2})/);
-
-      if (dateMatch) {
-        const date = dateMatch[1];
-        if (!validateDate(date)) {
-          return res
-            .status(400)
-            .json({ error: "Invalid date format. Use YYYY-MM-DD" });
-        }
-
-        // Validate current date restriction for non-GET requests
-        if (method !== "GET") {
-          const today = getLocalDateString();
-          if (date !== today) {
-            return res.status(400).json({
-              error: "Food items can only be modified for the current date",
-            });
-          }
-        }
-      }
-
-      if (method === "POST" && path.includes("/food")) {
-        const { mealType, name, unit, kcal } = body;
-
-        if (!validateMealType(mealType)) {
-          return res.status(400).json({
-            error: `Invalid meal type. Must be one of: ${mealTypes.join(", ")}`,
-          });
-        }
-
+      // Handle food database endpoint separately (no date or meal type validation)
+      if (method === "POST" && path.includes("/foodDatabase")) {
+        const { name, unit, kcal } = body;
         const foodErrors = validateFoodItem({ name, unit, kcal });
         if (foodErrors.length > 0) {
           return res.status(400).json({ error: foodErrors.join(". ") });
         }
-      }
+      } else {
+        // Handle date-based meal endpoints
+        const dateMatch = path.match(/\/api\/meals\/(\d{4}-\d{2}-\d{2})/);
 
-      if (method === "PUT" && path.includes("/food/")) {
-        const foodErrors = validateFoodItem(body);
-        if (foodErrors.length > 0) {
-          return res.status(400).json({ error: foodErrors.join(". ") });
+        if (dateMatch) {
+          const date = dateMatch[1];
+          if (!validateDate(date)) {
+            return res
+              .status(400)
+              .json({ error: "Invalid date format. Use YYYY-MM-DD" });
+          }
+
+          // Validate current date restriction for non-GET requests
+          if (method !== "GET") {
+            const today = getLocalDateString();
+            if (date !== today) {
+              return res.status(400).json({
+                error: "Food items can only be modified for the current date",
+              });
+            }
+          }
+        }
+
+        if (method === "POST" && path.includes("/food")) {
+          const { mealType, name, unit, kcal } = body;
+
+          if (!validateMealType(mealType)) {
+            return res.status(400).json({
+              error: `Invalid meal type. Must be one of: ${mealTypes.join(", ")}`,
+            });
+          }
+
+          const foodErrors = validateFoodItem({ name, unit, kcal });
+          if (foodErrors.length > 0) {
+            return res.status(400).json({ error: foodErrors.join(". ") });
+          }
+        }
+
+        if (method === "PUT" && path.includes("/food/")) {
+          const foodErrors = validateFoodItem(body);
+          if (foodErrors.length > 0) {
+            return res.status(400).json({ error: foodErrors.join(". ") });
+          }
         }
       }
     }

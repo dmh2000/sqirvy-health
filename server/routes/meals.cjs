@@ -296,4 +296,45 @@ router.get('/search', async (req, res) => {
   }
 });
 
+// POST /api/meals/foodDatabase - Add new food item to database
+router.post('/foodDatabase', async (req, res) => {
+  try {
+    const { name, unit, kcal } = req.body;
+    
+    console.log(`   🆕 Adding new food to database: "${name}" (${unit}, ${kcal} kcal)`);
+    
+    const mealsData = await readMealsData();
+    
+    // Check if food item already exists
+    const existingFood = mealsData.foodDatabase.find(f => 
+      f.name.toLowerCase() === name.toLowerCase().trim() && 
+      f.unit === unit
+    );
+    
+    if (existingFood) {
+      console.log(`   ⚠️ Food item already exists in database`);
+      return res.status(400).json({ error: 'Food item with this name and unit already exists in database' });
+    }
+    
+    // Add to food database
+    const newFoodItem = { name: name.trim(), unit, kcal };
+    mealsData.foodDatabase.push(newFoodItem);
+    
+    // Sort food database alphabetically
+    mealsData.foodDatabase.sort((a, b) => a.name.localeCompare(b.name));
+    
+    // Save data
+    const success = await writeMealsData(mealsData);
+    if (!success) {
+      return res.status(500).json({ error: 'Failed to save food item to database' });
+    }
+    
+    console.log(`   ✅ Successfully added "${name}" to food database`);
+    res.status(201).json(newFoodItem);
+  } catch (error) {
+    console.error('Error adding food to database:', error);
+    res.status(500).json({ error: 'Failed to add food item to database' });
+  }
+});
+
 module.exports = router;

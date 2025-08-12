@@ -42,6 +42,23 @@
         }
       ],
       "evening_snack": []
+    },
+    {
+      "date": "2025-08-12",
+      "totalKcal": 400,
+      "breakfast": [
+        {
+          "id": "b872de64-b1f5-45b2-9de1-0efc6202fcfe",
+          "name": "Sausage mcmuffin",
+          "unit": "serving",
+          "kcal": 400
+        }
+      ],
+      "morning_snack": [],
+      "lunch": [],
+      "afternoon_snack": [],
+      "dinner": [],
+      "evening_snack": []
     }
   ],
   "foodDatabase": [

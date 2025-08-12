@@ -91,6 +91,26 @@ export class ApiService {
     }
   }
 
+  async addFoodToDatabase(foodItem: Omit<FoodItem, 'id'>): Promise<Omit<FoodItem, 'id'> | null> {
+    try {
+      const response = await fetch(`${this.baseUrl}/meals/foodDatabase`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(foodItem),
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to add food to database');
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Error adding food to database:', error);
+      throw error; // Re-throw to let the caller handle it
+    }
+  }
+
   // Weight API
   async getWeight(): Promise<WeightData> {
     try {

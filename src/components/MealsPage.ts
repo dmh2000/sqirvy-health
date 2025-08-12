@@ -21,7 +21,10 @@ export class MealsPage {
 
     return `
       <div class="meals-page">
-        <h2>Meals - ${this.formatDate(state.currentDate)}</h2>
+        <div class="meals-header">
+          <h2>Meals - ${this.formatDate(state.currentDate)}</h2>
+          <button class="add-food-db-btn" id="add-food-db-btn">+ Add New Food Item</button>
+        </div>
         
         <div class="meals-grid">
           ${mealCards}
@@ -53,6 +56,51 @@ export class MealsPage {
               <div class="form-actions">
                 <button type="button" id="cancel-btn">Cancel</button>
                 <button type="submit" id="submit-btn">Add Item</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Add Food to Database Modal -->
+        <div id="food-db-modal" class="modal" style="display: none;">
+          <div class="modal-content">
+            <span class="close" id="close-food-db-modal">&times;</span>
+            <h3>Add New Food Item to Database</h3>
+            <form id="food-db-form">
+              <div class="form-group">
+                <label for="food-db-name">Food Name:</label>
+                <input type="text" id="food-db-name" required placeholder="Enter food name">
+              </div>
+              
+              <div class="form-group">
+                <label for="food-db-unit">Unit:</label>
+                <select id="food-db-unit" required>
+                  <option value="">Select unit</option>
+                  <option value="serving">serving</option>
+                  <option value="cup">cup</option>
+                  <option value="tablespoon">tablespoon</option>
+                  <option value="ounce">ounce</option>
+                  <option value="gram">gram</option>
+                  <option value="small">small</option>
+                  <option value="medium">medium</option>
+                  <option value="large">large</option>
+                  <option value="slice">slice</option>
+                  <option value="piece">piece</option>
+                  <option value="bowl">bowl</option>
+                  <option value="plate">plate</option>
+                  <option value="bunch">bunch</option>
+                  <option value="can">can</option>
+                </select>
+              </div>
+              
+              <div class="form-group">
+                <label for="food-db-calories">Calories (kcal):</label>
+                <input type="number" id="food-db-calories" min="1" required placeholder="Enter calories">
+              </div>
+              
+              <div class="form-actions">
+                <button type="button" id="food-db-cancel-btn">Cancel</button>
+                <button type="submit" id="food-db-submit-btn">Add to Database</button>
               </div>
             </form>
           </div>
@@ -232,6 +280,14 @@ export class MealsPage {
       if (target.matches('#close-modal, #cancel-btn')) {
         this.closeFoodModal();
       }
+
+      if (target.matches('#add-food-db-btn')) {
+        this.openFoodDbModal();
+      }
+
+      if (target.matches('#close-food-db-modal, #food-db-cancel-btn')) {
+        this.closeFoodDbModal();
+      }
     });
 
     // Form submission
@@ -240,6 +296,15 @@ export class MealsPage {
       form.addEventListener('submit', (e) => {
         e.preventDefault();
         this.submitFoodForm();
+      });
+    }
+
+    // Food database form submission
+    const foodDbForm = document.getElementById('food-db-form') as HTMLFormElement;
+    if (foodDbForm) {
+      foodDbForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        this.submitFoodDbForm();
       });
     }
 
@@ -480,6 +545,118 @@ export class MealsPage {
       NotificationManager.error('Failed to refresh meals data. Please try again.');
     } finally {
       LoadingManager.hide('meals-grid');
+    }
+  }
+
+  private static openFoodDbModal() {
+    const modal = document.getElementById('food-db-modal');
+    if (modal) modal.style.display = 'block';
+    this.resetFoodDbForm();
+  }
+
+  private static closeFoodDbModal() {
+    const modal = document.getElementById('food-db-modal');
+    if (modal) modal.style.display = 'none';
+    this.resetFoodDbForm();
+  }
+
+  private static resetFoodDbForm() {
+    const form = document.getElementById('food-db-form') as HTMLFormElement;
+    if (form) form.reset();
+    this.clearFoodDbFormErrors();
+  }
+
+  private static clearFoodDbFormErrors() {
+    const modal = document.getElementById('food-db-modal');
+    if (!modal) return;
+    
+    // Remove all error messages
+    const errors = modal.querySelectorAll('.form-error');
+    errors.forEach(error => error.remove());
+    
+    // Remove error styling
+    const fields = modal.querySelectorAll('input, select');
+    fields.forEach(field => field.classList.remove('error'));
+  }
+
+  private static showFoodDbFormError(fieldId: string, message: string) {
+    const field = document.getElementById(fieldId);
+    if (!field) return;
+    
+    // Remove existing error
+    const existingError = field.parentNode?.querySelector('.form-error');
+    if (existingError) existingError.remove();
+    
+    // Add error message
+    const error = document.createElement('span');
+    error.className = 'form-error';
+    error.textContent = message;
+    field.parentNode?.appendChild(error);
+    
+    // Add error styling
+    field.classList.add('error');
+    field.focus();
+  }
+
+  private static async submitFoodDbForm() {
+    const nameInput = document.getElementById('food-db-name') as HTMLInputElement;
+    const unitSelect = document.getElementById('food-db-unit') as HTMLSelectElement;
+    const caloriesInput = document.getElementById('food-db-calories') as HTMLInputElement;
+    const submitBtn = document.getElementById('food-db-submit-btn') as HTMLButtonElement;
+    
+    if (!nameInput || !unitSelect || !caloriesInput) return;
+
+    const foodItem = {
+      name: nameInput.value.trim(),
+      unit: unitSelect.value,
+      kcal: parseInt(caloriesInput.value)
+    };
+
+    // Validation
+    if (!foodItem.name) {
+      this.showFoodDbFormError('food-db-name', 'Food name is required');
+      return;
+    }
+    
+    if (!foodItem.unit) {
+      this.showFoodDbFormError('food-db-unit', 'Please select a unit');
+      return;
+    }
+    
+    if (!foodItem.kcal || foodItem.kcal <= 0) {
+      this.showFoodDbFormError('food-db-calories', 'Please enter a valid number of calories');
+      return;
+    }
+
+    // Clear any existing errors
+    this.clearFoodDbFormErrors();
+    
+    try {
+      // Show loading state
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.classList.add('loading');
+      }
+      
+      const result = await this.api.addFoodToDatabase(foodItem);
+      
+      if (result) {
+        NotificationManager.success(`Added "${foodItem.name}" to food database`);
+        this.closeFoodDbModal();
+        // Refresh the food dropdown to include the new item
+        await this.loadFoodDatabase();
+      } else {
+        NotificationManager.error('Failed to add food item to database. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error adding food to database:', error);
+      NotificationManager.error('Failed to add food item to database. Please check your connection and try again.');
+    } finally {
+      // Remove loading state
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('loading');
+      }
     }
   }
 
