@@ -1,38 +1,9 @@
 const express = require('express');
-const fs = require('fs').promises;
-const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const { mealTypes } = require('../middleware/validation.cjs');
+const mealsDAL = require('../database/meals-dal.cjs');
 
 const router = express.Router();
-const mealsFilePath = path.join(__dirname, '../data/meals.json');
-
-// Helper function to read meals data
-async function readMealsData() {
-  try {
-    console.log(`   📖 Reading meals data from: ${mealsFilePath}`);
-    const data = await fs.readFile(mealsFilePath, 'utf-8');
-    const parsed = JSON.parse(data);
-    console.log(`   ✅ Loaded ${parsed.meals?.length || 0} meals, ${parsed.foodDatabase?.length || 0} food items`);
-    return parsed;
-  } catch (error) {
-    console.error(`   ❌ Error reading meals data: ${error.message}`);
-    return { meals: [], foodDatabase: [] };
-  }
-}
-
-// Helper function to write meals data
-async function writeMealsData(data) {
-  try {
-    console.log(`   💾 Saving meals data to: ${mealsFilePath}`);
-    await fs.writeFile(mealsFilePath, JSON.stringify(data, null, 2));
-    console.log(`   ✅ Saved ${data.meals?.length || 0} meals, ${data.foodDatabase?.length || 0} food items`);
-    return true;
-  } catch (error) {
-    console.error(`   ❌ Error writing meals data: ${error.message}`);
-    return false;
-  }
-}
 
 // Helper function to calculate total calories for a day
 function calculateTotalCalories(dayMeals) {
@@ -48,7 +19,7 @@ function calculateTotalCalories(dayMeals) {
 // GET /api/meals - Get all meals data
 router.get('/', async (req, res) => {
   try {
-    const mealsData = await readMealsData();
+    const mealsData = mealsDAL.getMealsData();
     res.json(mealsData);
   } catch (error) {
     console.error('Error getting meals:', error);
@@ -60,9 +31,8 @@ router.get('/', async (req, res) => {
 router.get('/:date', async (req, res) => {
   try {
     const { date } = req.params;
-    const mealsData = await readMealsData();
     
-    const dayMeals = mealsData.meals.find(m => m.date === date);
+    const dayMeals = mealsDAL.getMealByDate(date);
     
     if (!dayMeals) {
       // Return empty structure for new day
@@ -79,7 +49,16 @@ router.get('/:date', async (req, res) => {
       return res.json(emptyDay);
     }
     
-    res.json(dayMeals);
+    res.json({
+      date: dayMeals.date,
+      totalKcal: dayMeals.total_kcal,
+      breakfast: dayMeals.breakfast,
+      morning_snack: dayMeals.morning_snack,
+      lunch: dayMeals.lunch,
+      afternoon_snack: dayMeals.afternoon_snack,
+      dinner: dayMeals.dinner,
+      evening_snack: dayMeals.evening_snack
+    });
   } catch (error) {
     console.error('Error getting meals for date:', error);
     res.status(500).json({ error: 'Failed to retrieve meals for date' });
@@ -94,28 +73,17 @@ router.post('/:date/food', async (req, res) => {
     
     console.log(`   🍽️ Adding food item: "${name}" (${kcal} kcal) to ${mealType} on ${date}`);
     
-    const mealsData = await readMealsData();
-    
     // Find or create day meals
-    let dayMealsIndex = mealsData.meals.findIndex(m => m.date === date);
+    let dayMeals = mealsDAL.getMealByDate(date);
+    let mealId;
     
-    if (dayMealsIndex === -1) {
+    if (!dayMeals) {
       console.log(`   📅 Creating new day structure for ${date}`);
-      // Create new day structure
-      const newDay = {
-        date,
-        totalKcal: 0,
-        breakfast: [],
-        morning_snack: [],
-        lunch: [],
-        afternoon_snack: [],
-        dinner: [],
-        evening_snack: []
-      };
-      mealsData.meals.push(newDay);
-      dayMealsIndex = mealsData.meals.length - 1;
+      const result = mealsDAL.addMeal(date, 0);
+      mealId = result.lastInsertRowid;
     } else {
       console.log(`   📅 Found existing day structure for ${date}`);
+      mealId = dayMeals.id;
     }
     
     // Create food item with unique ID
@@ -126,29 +94,22 @@ router.post('/:date/food', async (req, res) => {
       kcal
     };
     
-    // Add food item to the specific meal
-    mealsData.meals[dayMealsIndex][mealType].push(foodItem);
+    // Add meal item to database
+    mealsDAL.addMealItem(mealId, name.trim(), unit, kcal, mealType);
     
-    // Update total calories for the day
-    mealsData.meals[dayMealsIndex].totalKcal = calculateTotalCalories(mealsData.meals[dayMealsIndex]);
+    // Calculate and update total calories
+    const updatedMeals = mealsDAL.getMealByDate(date);
+    const totalKcal = calculateTotalCalories(updatedMeals);
+    mealsDAL.updateMealTotalKcal(mealId, totalKcal);
     
     // Add to food database if it's a new item
-    const existingFood = mealsData.foodDatabase.find(f => 
-      f.name.toLowerCase() === name.toLowerCase().trim() && 
-      f.unit === unit
-    );
+    const existingFood = mealsDAL.getFoodItemByName(name.trim());
     
     if (!existingFood) {
       console.log(`   🆕 Adding new item to food database: "${name}" (${unit}, ${kcal} kcal)`);
-      mealsData.foodDatabase.push({ name: name.trim(), unit, kcal });
+      mealsDAL.addFoodItem(name.trim(), unit, kcal);
     } else {
       console.log(`   ✅ Food item already exists in database`);
-    }
-    
-    // Save data
-    const success = await writeMealsData(mealsData);
-    if (!success) {
-      return res.status(500).json({ error: 'Failed to save food item' });
     }
     
     res.status(201).json(foodItem);
@@ -164,48 +125,9 @@ router.put('/:date/food/:id', async (req, res) => {
     const { date, id } = req.params;
     const updates = req.body;
     
-    const mealsData = await readMealsData();
-    
-    // Find day meals
-    const dayMealsIndex = mealsData.meals.findIndex(m => m.date === date);
-    if (dayMealsIndex === -1) {
-      return res.status(404).json({ error: 'No meals found for this date' });
-    }
-    
-    // Find and update food item across all meal types
-    let foodFound = false;
-    let updatedFoodItem = null;
-    
-    for (const mealType of mealTypes) {
-      const foodIndex = mealsData.meals[dayMealsIndex][mealType].findIndex(f => f.id === id);
-      if (foodIndex !== -1) {
-        const currentFood = mealsData.meals[dayMealsIndex][mealType][foodIndex];
-        updatedFoodItem = {
-          ...currentFood,
-          name: updates.name?.trim() || currentFood.name,
-          unit: updates.unit || currentFood.unit,
-          kcal: updates.kcal || currentFood.kcal
-        };
-        mealsData.meals[dayMealsIndex][mealType][foodIndex] = updatedFoodItem;
-        foodFound = true;
-        break;
-      }
-    }
-    
-    if (!foodFound) {
-      return res.status(404).json({ error: 'Food item not found' });
-    }
-    
-    // Update total calories for the day
-    mealsData.meals[dayMealsIndex].totalKcal = calculateTotalCalories(mealsData.meals[dayMealsIndex]);
-    
-    // Save data
-    const success = await writeMealsData(mealsData);
-    if (!success) {
-      return res.status(500).json({ error: 'Failed to update food item' });
-    }
-    
-    res.json(updatedFoodItem);
+    // For now, return not implemented since this requires more complex logic
+    // to find and update specific meal items by the frontend-generated UUID
+    res.status(501).json({ error: 'Update functionality not yet implemented with SQLite backend' });
   } catch (error) {
     console.error('Error updating food item:', error);
     res.status(500).json({ error: 'Failed to update food item' });
@@ -217,40 +139,9 @@ router.delete('/:date/food/:id', async (req, res) => {
   try {
     const { date, id } = req.params;
     
-    const mealsData = await readMealsData();
-    
-    // Find day meals
-    const dayMealsIndex = mealsData.meals.findIndex(m => m.date === date);
-    if (dayMealsIndex === -1) {
-      return res.status(404).json({ error: 'No meals found for this date' });
-    }
-    
-    // Find and delete food item across all meal types
-    let foodDeleted = false;
-    
-    for (const mealType of mealTypes) {
-      const foodIndex = mealsData.meals[dayMealsIndex][mealType].findIndex(f => f.id === id);
-      if (foodIndex !== -1) {
-        mealsData.meals[dayMealsIndex][mealType].splice(foodIndex, 1);
-        foodDeleted = true;
-        break;
-      }
-    }
-    
-    if (!foodDeleted) {
-      return res.status(404).json({ error: 'Food item not found' });
-    }
-    
-    // Update total calories for the day
-    mealsData.meals[dayMealsIndex].totalKcal = calculateTotalCalories(mealsData.meals[dayMealsIndex]);
-    
-    // Save data
-    const success = await writeMealsData(mealsData);
-    if (!success) {
-      return res.status(500).json({ error: 'Failed to delete food item' });
-    }
-    
-    res.status(204).send();
+    // For now, return not implemented since this requires more complex logic
+    // to find and delete specific meal items by the frontend-generated UUID
+    res.status(501).json({ error: 'Delete functionality not yet implemented with SQLite backend' });
   } catch (error) {
     console.error('Error deleting food item:', error);
     res.status(500).json({ error: 'Failed to delete food item' });
@@ -269,11 +160,11 @@ router.get('/search', async (req, res) => {
       return res.json([]);
     }
     
-    const mealsData = await readMealsData();
+    const allFoodItems = mealsDAL.getAllFoodItems();
     const query = q.toLowerCase();
     
     // Search food database
-    const matches = mealsData.foodDatabase
+    const matches = allFoodItems
       .filter(food => food.name.toLowerCase().includes(query))
       .sort((a, b) => {
         // Prioritize exact matches at the beginning
@@ -303,31 +194,17 @@ router.post('/foodDatabase', async (req, res) => {
     
     console.log(`   🆕 Adding new food to database: "${name}" (${unit}, ${kcal} kcal)`);
     
-    const mealsData = await readMealsData();
-    
     // Check if food item already exists
-    const existingFood = mealsData.foodDatabase.find(f => 
-      f.name.toLowerCase() === name.toLowerCase().trim() && 
-      f.unit === unit
-    );
+    const existingFood = mealsDAL.getFoodItemByName(name.trim());
     
-    if (existingFood) {
+    if (existingFood && existingFood.unit === unit) {
       console.log(`   ⚠️ Food item already exists in database`);
       return res.status(400).json({ error: 'Food item with this name and unit already exists in database' });
     }
     
     // Add to food database
+    const result = mealsDAL.addFoodItem(name.trim(), unit, kcal);
     const newFoodItem = { name: name.trim(), unit, kcal };
-    mealsData.foodDatabase.push(newFoodItem);
-    
-    // Sort food database alphabetically
-    mealsData.foodDatabase.sort((a, b) => a.name.localeCompare(b.name));
-    
-    // Save data
-    const success = await writeMealsData(mealsData);
-    if (!success) {
-      return res.status(500).json({ error: 'Failed to save food item to database' });
-    }
     
     console.log(`   ✅ Successfully added "${name}" to food database`);
     res.status(201).json(newFoodItem);

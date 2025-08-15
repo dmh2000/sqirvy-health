@@ -147,3 +147,5 @@ you can use the sqlite mcp server to create the database
   - create a table for food items
   - modify the server code to use the new database
   - create simple tests that the tables are created and data is stored correctly. put the tests in folder db/tests
+
+do not implement the changes yet. just create the plan.
