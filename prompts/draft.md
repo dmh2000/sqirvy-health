@@ -133,3 +133,17 @@ The application will have 3 pages:
             ]
         }
     ```
+
+======================================================================================
+i want to convert the sqirvy-health data store from the json database to sqlite database.
+First, create a plan for the conversion. put the plan in file "db/plan.md"
+
+you can use the sqlite mcp server to create the database
+
+- steps:
+  - create a sqlite database in db/sqirvy-health.db
+  - create a table for meals
+  - create a table for weight
+  - create a table for food items
+  - modify the server code to use the new database
+  - create simple tests that the tables are created and data is stored correctly. put the tests in folder db/tests

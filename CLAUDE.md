@@ -11,6 +11,7 @@ This is the sqirvy-health (formerly sqirvy-calories) project - a calorie and wei
 Based on the design document in `prompts/draft.md`, this will be a full-stack web application:
 
 ### Frontend
+
 - HTML, CSS, and JavaScript/TypeScript
 - Vite framework with vanilla-ts template
 - Three main pages:
@@ -19,6 +20,7 @@ Based on the design document in `prompts/draft.md`, this will be a full-stack we
   - **Weight**: Weight entry form
 
 ### Backend
+
 - Node.js application
 - JSON file-based data storage
 - REST API endpoints for:
@@ -29,6 +31,7 @@ Based on the design document in `prompts/draft.md`, this will be a full-stack we
 ## Data Structure
 
 ### Meals Data
+
 ```json
 {
   "meals": [{
@@ -45,25 +48,18 @@ Based on the design document in `prompts/draft.md`, this will be a full-stack we
 ```
 
 ### Weight Data
+
 ```json
 {
   "weight": {
     "goal": 100,
-    "daily": [{"date": "2020-01-01", "weight": 100}]
+    "daily": [{ "date": "2020-01-01", "weight": 100 }]
   }
 }
 ```
 
-## Development Notes
+# BASH commands
 
-- Project is in early planning phase - no actual implementation exists yet
-- Will use Vite with vanilla TypeScript template when development begins
-- Backend will serve both API endpoints and static frontend files
-- Food item search functionality will query existing meal data for suggestions
-
-## Current State
-
-This repository contains only planning documents. When development begins, standard Vite commands will likely apply:
 - `npm run dev` for development server
 - `npm run build` for production build
 - `npm run preview` for production preview
